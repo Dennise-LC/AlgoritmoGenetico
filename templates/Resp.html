@@ -1,0 +1,199 @@
+{% extends 'C:/Users/Chimp/Desktop/DenniProyectoDoris/Palabras/templates/Base.html' %}
+
+{% block Contenido %}
+{% load static %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.2.0/p5.js"></script>
+<script src="{% static 'Js/DNA.js' %}"></script>
+<script src="{% static 'Js/Population.js'%}"></script>
+<script>
+
+    let target;
+    let popmax;
+    let mutationRate;
+    let population;
+
+    let bestPhrase;
+    let allPhrases;
+    let stats;
+
+    function setup() {
+        bestPhrase = createP("");
+        //bestPhrase.position(10,10);
+        bestPhrase.class("best");
+
+        allPhrases = createP("");
+        allPhrases.position(600, 10);
+        allPhrases.class("all");
+
+        stats = createP("Stats");
+        //stats.position(10,200);
+        stats.class("stats");
+
+        //createCanvas(640, 360);
+        target = "{{T|safe}}";
+        popmax = "{{P|safe}}";
+        mutationRate = parseFloat("{{M|safe}}");
+
+        console.log(target)
+
+        //Crea una población con una frase objetivo, una tasa de mutación y una población máxima
+        population = new Population(target, mutationRate, popmax);
+    }
+
+    function draw() {
+        //Generar grupo de apareamiento
+        population.naturalSelection();
+        //Crea la siguinete generacion
+        population.generate();
+        // Calcula la aptitud
+        population.calcFitness();
+
+        population.evaluate();
+
+        // Si encontramos la frase de destino, deténgase.
+        if (population.isFinished()) {
+            //println(millis()/1000.0);
+            noLoop();
+        }
+
+        displayInfo();
+    }
+
+    function displayInfo() {
+        // Muestra el estado actual de la población
+        let answer = population.getBest();
+
+        document.getElementById('R').setAttribute('value', answer);
+
+        document.getElementById('G').setAttribute('value', population.getGenerations());
+        document.getElementById('F').setAttribute('value', nf(population.getAverageFitness()))
+        document.getElementById('P').setAttribute('value', popmax)
+        document.getElementById('M').setAttribute('value', floor(mutationRate * 100)+"%")
+        document.getElementById('lista').innerHTML = population.allPhrases();
+    }
+
+
+</script>
+
+
+<header class="titulo">
+    <h1>Letras</h1>
+</header>
+<div class="row g-1">
+    <!–– Columna 1 ––>
+        <div class="col-lg-7 Opciones p-3">
+            <!–– BEST PHRASE ––>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text inColor" id="inputGroup-sizing-lg">MEJOR FRASE:</span>
+                    <input type="text" class="form-control" aria-label="Sizing example input"
+                        aria-describedby="inputGroup-sizing-lg" aria-label="Disabled input example" disabled readonly
+                        id="R">
+                </div>
+                <div class="programa">
+                    <div class="scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>
+                                        Respuesta
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista">
+
+                            </tbody>
+                        </table>
+
+
+                        </tr>
+                    </div>
+                </div>
+        </div>
+        <!–– Columna 2 ––>
+            <div class="col-lg-5 col-md-5 col-xs-12">
+                <div class="textF">
+                    <h6>DATOS A INGRESAR</h6>
+                </div>
+                <!–– Contenedor de labels ––>
+                    <div class="Resultados p-3">
+                        <form action="{% url 'AGP:AGResultado' %}" method="GET">
+
+                            <!–– Label 1 ––>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text inColor" id="Texto">Entrada:</span>
+                                    <input type="text" class="form-control" aria-label="Sizing example input"
+                                        aria-describedby="inputGroup-sizing-default"
+                                        placeholder="Ingrese el texto aqui." id="Texto" name="Texto">
+                                </div>
+                                <!–– Label 2 ––>
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text inColor" id="Mutacion">Mutacion:</span>
+                                        <input type="text" class="form-control" aria-label="Sizing example input"
+                                            aria-describedby="inputGroup-sizing-default"
+                                            placeholder="Se recomienda mutacion de 0.01." id="Mutacion" name="Mutacion">
+                                    </div>
+                                    <!–– Label 3 ––>
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text inColor" id="Poblacion">Poblacion:</span>
+                                            <input type="text" class="form-control" aria-label="Sizing example input"
+                                                aria-describedby="inputGroup-sizing-default"
+                                                placeholder="Ingrese el tamaño de la poblacion." id="Poblacion"
+                                                name="Poblacion">
+                                        </div>
+                                        <!–– Button ––>
+                                            <div class="d-grid gap-2">
+                                                <button class="btn btn-grad" type="submit">Sigiente</button>
+                                            </div>
+
+                        </form>
+
+                    </div>
+                    <div class="textF">
+                        <h6>RESULTADOS</h6>
+                    </div>
+                    <!–– Contenedor de labels ––>
+                        <div class="Resultados p-3">
+                            <!–– input 1 ––>
+                                <div class="input-group-sm mb-3">
+                                    <span class="input-group-text inColor" id="input-1">Total de generaciones:</span>
+                                    <input type="text" class="form-control" aria-label="Sizing example input"
+                                        aria-describedby="inputGroup-sizing-default" aria-label="Disabled input example"
+                                        disabled readonly id="G">
+                                </div>
+                                <!–– input 2 ––>
+                                    <div class="input-group-sm mb-3">
+                                        <span class="input-group-text inColor" id="input-2">Aptitud mas alta</span>
+                                        <input type="text" class="form-control" aria-label="Sizing example input"
+                                            aria-describedby="inputGroup-sizing-default"
+                                            aria-label="Disabled input example" disabled readonly id="F">
+                                    </div>
+                                    <!–– input 3 ––>
+                                        <div class="input-group-sm mb-3">
+                                            <span class="input-group-text inColor" id="input-3">Total de poblacion:</span>
+                                            <input type="text" class="form-control" aria-label="Sizing example input"
+                                                aria-describedby="inputGroup-sizing-default"
+                                                aria-label="Disabled input example" disabled readonly id="P">
+                                        </div>
+                                        <!–– input 4 ––>
+                                            <div class="input-group-sm mb-3">
+                                                <span class="input-group-text inColor" id="input-4">Porcentaje de Mutation
+                                                    :</span>
+                                                <input type="text" class="form-control"
+                                                    aria-label="Sizing example input"
+                                                    aria-describedby="inputGroup-sizing-default"
+                                                    aria-label="Disabled input example" disabled readonly id="M">
+                                            </div>
+                        </div>
+
+            </div>
+
+            <footer class="pie">
+                <div class="text p-2" id="UAEM">
+                    <span>A.G. | Algoritmos Geneticos | ISI INGENIERIA EN SISTEMAS INTELIGENTES</span>
+                    <span>Laura Dennise Lopez Cervantes</span>
+
+                    <a class="text-reset fw-bold"></a>
+                </div>
+            </footer>
+</div>
+{% endblock Contenido %}
